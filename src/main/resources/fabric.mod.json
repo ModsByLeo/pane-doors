@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "testing-grounds",
+  "version": "${version}",
+  "name": "Testing Grounds",
+  "description": "Please locate the nearest exit.",
+  "authors": [
+    "ADudeCalledLeo"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/testing-grounds/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "io.github.modsbyleo.testinggrounds.client.ClientInitializer"
+    ],
+    "main": [
+      "io.github.modsbyleo.testinggrounds.Initializer"
+    ]
+  },
+  "mixins": [
+    "testing-grounds.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.11.3",
+    "minecraft": "1.17-alpha.21.19.a"
+  }
+}
