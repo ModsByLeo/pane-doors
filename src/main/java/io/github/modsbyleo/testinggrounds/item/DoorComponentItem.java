@@ -4,6 +4,7 @@ import io.github.modsbyleo.testinggrounds.block.DoorComponentBlock;
 import io.github.modsbyleo.testinggrounds.block.ModBlocks;
 import io.github.modsbyleo.testinggrounds.block.entity.DoorComponentBlockEntity;
 import io.github.modsbyleo.testinggrounds.block.entity.ModBlockEntityTypes;
+import io.github.modsbyleo.testinggrounds.util.DirectionUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.PaneBlock;
@@ -16,6 +17,7 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.Level;
@@ -48,6 +50,7 @@ public abstract class DoorComponentItem extends Item {
                     context.getPlayer().sendMessage(new LiteralText("Can't place component on top or bottom!"), true);
                 return ActionResult.FAIL;
             }
+            axis = DirectionUtil.swapXZ(axis);
             state = ModBlocks.DOOR_COMPONENT.getDefaultState().with(DoorComponentBlock.AXIS, axis);
             world.setBlockState(pos, state, Block.NOTIFY_ALL);
             DoorComponentBlockEntity blockEntity = new DoorComponentBlockEntity(pos, ModBlocks.DOOR_COMPONENT.getDefaultState());
@@ -85,18 +88,23 @@ public abstract class DoorComponentItem extends Item {
     private static @NotNull String worldPosStr(@NotNull World world, @NotNull BlockPos pos) {
         return "<world:'" + world + "'," +
                 "dim:'" + world.getRegistryKey().getValue() + "'>" +
-                "@ (" + pos + ")";
+                "@ (" + pos.toShortString() + ")";
     }
 
     protected static boolean placeComponent(@NotNull ItemUsageContext ctx, @NotNull BlockState state,
                                          @NotNull DoorComponentBlock.ComponentType toPlace) {
-        if (state.get(DoorComponentBlock.THIN_DOUBLE)) {
+        Direction.Axis axis = DirectionUtil.swapXZ(ctx.getPlayerFacing().getAxis());
+        if (state.get(DoorComponentBlock.THIN_DOUBLE)
+                || axis != state.get(DoorComponentBlock.AXIS)) {
             if (ctx.getPlayer() != null)
                 ctx.getPlayer().sendMessage(new LiteralText("Can't place component here!"), true);
             return false;
         }
+        Vec3d hitPos = ctx.getHitPos();
+        double hitAt = DirectionUtil.choose(axis, hitPos) - DirectionUtil.choose(axis, ctx.getBlockPos());
+        log(Level.INFO, hitPos + ", hit at " + hitAt);
         EnumProperty<DoorComponentBlock.ComponentType> prop
-                = ctx.getHitPos().x <= 0.5 ? DoorComponentBlock.LEFT_COMPONENT : DoorComponentBlock.RIGHT_COMPONENT;
+                = hitAt <= 0.5 ? DoorComponentBlock.LEFT_COMPONENT : DoorComponentBlock.RIGHT_COMPONENT;
         DoorComponentBlock.ComponentType cType = state.get(prop);
         if (cType != DoorComponentBlock.ComponentType.NONE) {
             if (ctx.getPlayer() != null)
