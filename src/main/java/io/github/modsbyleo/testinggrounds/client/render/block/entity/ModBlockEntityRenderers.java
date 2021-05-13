@@ -10,7 +10,7 @@ public final class ModBlockEntityRenderers {
     private ModBlockEntityRenderers() { }
 
     public static void register() {
-        BlockEntityRendererRegistry.INSTANCE.register(ModBlockEntityTypes.DOOR_COMPONENT,
-                DoorComponentBlockEntityRenderer::new);
+        BlockEntityRendererRegistry.INSTANCE.register(ModBlockEntityTypes.FAKE_PANE,
+                FakePaneBlockEntityRenderer::new);
     }
 }

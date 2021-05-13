@@ -10,10 +10,11 @@ import static io.github.modsbyleo.testinggrounds.Initializer.id;
 public final class ModBlockEntityTypes {
     private ModBlockEntityTypes() { }
 
-    public static final BlockEntityType<DoorComponentBlockEntity> DOOR_COMPONENT =
-            FabricBlockEntityTypeBuilder.create(DoorComponentBlockEntity::new, ModBlocks.DOOR_COMPONENT).build();
+    public static final BlockEntityType<FakePaneBlockEntity> FAKE_PANE =
+            FabricBlockEntityTypeBuilder.create(FakePaneBlockEntity::new,
+                    ModBlocks.FAKE_PANE, ModBlocks.HINGE, ModBlocks.HANDLE).build();
 
     public static void register() {
-        Registry.register(Registry.BLOCK_ENTITY_TYPE, id("door_component"), DOOR_COMPONENT);
+        Registry.register(Registry.BLOCK_ENTITY_TYPE, id("fake_pane"), FAKE_PANE);
     }
 }

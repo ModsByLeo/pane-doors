@@ -9,9 +9,13 @@ import static io.github.modsbyleo.testinggrounds.Initializer.id;
 public final class ModBlocks {
     private ModBlocks() { }
 
-    public static final DoorComponentBlock DOOR_COMPONENT = new DoorComponentBlock(FabricBlockSettings.of(Material.GLASS).nonOpaque());
+    public static final FakePaneBlock FAKE_PANE = new FakePaneBlock(FabricBlockSettings.of(Material.GLASS).nonOpaque());
+    public static final HingeBlock HINGE = new HingeBlock(FabricBlockSettings.of(Material.STONE).nonOpaque());
+    public static final HandleBlock HANDLE = new HandleBlock(FabricBlockSettings.of(Material.STONE).nonOpaque());
 
     public static void register() {
-        Registry.register(Registry.BLOCK, id("door_component"), DOOR_COMPONENT);
+        Registry.register(Registry.BLOCK, id("fake_pane"), FAKE_PANE);
+        Registry.register(Registry.BLOCK, id("hinge"), HINGE);
+        Registry.register(Registry.BLOCK, id("handle"), HANDLE);
     }
 }
