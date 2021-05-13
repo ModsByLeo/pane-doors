@@ -1,20 +1,35 @@
 package io.github.modsbyleo.testinggrounds.block.entity;
 
+import io.github.modsbyleo.testinggrounds.block.DoorComponentBlock;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.block.entity.BlockEntityClientSerializable;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.PaneBlock;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
+import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashSet;
+
 import static io.github.modsbyleo.testinggrounds.Initializer.id;
+import static io.github.modsbyleo.testinggrounds.client.ClientInitializer.log;
 
 public final class DoorComponentBlockEntity extends BlockEntity implements BlockEntityClientSerializable {
     public static final Identifier EMPTY_PANE_ID = id("empty");
+    @Environment(EnvType.CLIENT)
+    private static final HashSet<DoorComponentBlockEntity> ERROR_BLOCK_ENTITIES = new HashSet<>();
 
     private @NotNull Identifier paneId;
+    @Environment(EnvType.CLIENT)
+    private BlockState renderState;
 
     public DoorComponentBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntityTypes.DOOR_COMPONENT, pos, state);
@@ -30,6 +45,26 @@ public final class DoorComponentBlockEntity extends BlockEntity implements Block
         this.paneId = paneId;
         if (!oldPaneId.equals(paneId))
             markDirtyAndSync();
+    }
+
+    @Environment(EnvType.CLIENT)
+    public @NotNull BlockState getRenderState() {
+        if (renderState == null) {
+            Block block = Registry.BLOCK.get(getPaneId());
+            if (!(block instanceof PaneBlock)) {
+                if (ERROR_BLOCK_ENTITIES.add(this))
+                    log(Level.ERROR, getPaneId() + " ain't a pane block (" + getPos().toShortString() + ")");
+                return Blocks.STONE.getDefaultState();
+            }
+            ERROR_BLOCK_ENTITIES.remove(this);
+            renderState = block.getDefaultState();
+            renderState = switch (getCachedState().get(DoorComponentBlock.AXIS)) {
+                case X -> renderState.with(PaneBlock.WEST, true).with(PaneBlock.EAST, true);
+                case Z -> renderState.with(PaneBlock.NORTH, true).with(PaneBlock.SOUTH, true);
+                default -> renderState;
+            };
+        }
+        return renderState;
     }
 
     private void markDirtyAndSync() {
