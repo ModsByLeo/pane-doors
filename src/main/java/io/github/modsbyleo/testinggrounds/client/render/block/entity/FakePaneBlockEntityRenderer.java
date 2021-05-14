@@ -41,7 +41,9 @@ public final class FakePaneBlockEntityRenderer implements BlockEntityRenderer<Fa
 
         BlockState actualState = entity.getCachedState();
         if (actualState.isOf(ModBlocks.HINGE)) {
-            // TODO render hinge and handle models
+            // TODO draw hinge and handle
+        } else if (actualState.isOf(ModBlocks.HANDLE)) {
+            // TODO draw handle
         }
     }
 }

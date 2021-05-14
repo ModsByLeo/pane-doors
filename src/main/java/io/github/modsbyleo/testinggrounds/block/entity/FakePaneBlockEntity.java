@@ -1,13 +1,11 @@
 package io.github.modsbyleo.testinggrounds.block.entity;
 
-import io.github.modsbyleo.testinggrounds.block.HingeBlock;
+import io.github.modsbyleo.testinggrounds.block.FakePaneBlock;
+import io.github.modsbyleo.testinggrounds.block.ModBlocks;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.block.entity.BlockEntityClientSerializable;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.PaneBlock;
+import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -42,8 +40,10 @@ public final class FakePaneBlockEntity extends BlockEntity implements BlockEntit
     public void setPaneId(@NotNull Identifier paneId) {
         Identifier oldPaneId = this.paneId;
         this.paneId = paneId;
-        if (!oldPaneId.equals(paneId))
+        if (!oldPaneId.equals(paneId)) {
+            invalidateRenderState();
             markDirtyAndSync();
+        }
     }
 
     @Environment(EnvType.CLIENT)
@@ -53,17 +53,32 @@ public final class FakePaneBlockEntity extends BlockEntity implements BlockEntit
             if (!(block instanceof PaneBlock)) {
                 if (ERROR_BLOCK_ENTITIES.add(this))
                     log(Level.ERROR, getPaneId() + " ain't a pane block (" + getPos().toShortString() + ")");
-                return Blocks.STONE.getDefaultState();
+                return Blocks.WALL_TORCH.getDefaultState().with(WallTorchBlock.FACING, getCachedState().get(FakePaneBlock.FACING));
             }
             ERROR_BLOCK_ENTITIES.remove(this);
             renderState = block.getDefaultState();
-            renderState = switch (getCachedState().get(HingeBlock.FACING)) {
-                case NORTH, SOUTH -> renderState.with(PaneBlock.EAST, true).with(PaneBlock.WEST, true);
-                case EAST, WEST -> renderState.with(PaneBlock.NORTH, true).with(PaneBlock.SOUTH, true);
-                default -> renderState;
-            };
+            if (getCachedState().isOf(ModBlocks.HINGE)) {
+                // hinge's facing is where the _hinge_ is facing, not the pane itself
+                // pane is perpendicular to the hinge
+                renderState = switch (getCachedState().get(FakePaneBlock.FACING)) {
+                    case NORTH, SOUTH -> renderState.with(PaneBlock.NORTH, true).with(PaneBlock.SOUTH, true);
+                    case EAST, WEST -> renderState.with(PaneBlock.EAST, true).with(PaneBlock.WEST, true);
+                    default -> renderState;
+                };
+            } else {
+                // for standard fake panes (and handle), facing is where the pane is facing
+                renderState = switch (getCachedState().get(FakePaneBlock.FACING)) {
+                    case NORTH, SOUTH -> renderState.with(PaneBlock.EAST, true).with(PaneBlock.WEST, true);
+                    case EAST, WEST -> renderState.with(PaneBlock.NORTH, true).with(PaneBlock.SOUTH, true);
+                    default -> renderState;
+                };
+            }
         }
         return renderState;
+    }
+
+    public void invalidateRenderState() {
+        renderState = null;
     }
 
     private void markDirtyAndSync() {
@@ -101,7 +116,7 @@ public final class FakePaneBlockEntity extends BlockEntity implements BlockEntit
     @Override
     public void fromClientTag(NbtCompound tag) {
         readNbt(tag);
-        renderState = null;
+        invalidateRenderState();
     }
 
     @Override
